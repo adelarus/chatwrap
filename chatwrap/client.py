@@ -11,7 +11,8 @@ class LLMClient:
 
     totalNoOfTokens = 0
     
-    def __init__(self, url):
+    def __init__(self, url, openai_key):
+        self.openai_key = openai_key
 
         self.url = url
 
@@ -43,7 +44,8 @@ class LLMClient:
         return wrapper
     
     #@log_tokens
-    def send_request(self, prompt, model="4o-mini", temperature=0.7, streaming=False):
+    def send_request(self, prompt, model="4o-mini", temperature=0.7, streaming=False,
+                     system_prompt='You are a helpful HR assistant'):
         # body = {
         #     "model": model,
         #     "messages": [
@@ -54,17 +56,14 @@ class LLMClient:
         #     "max_tokens": 100,
         #     "stream": streaming
         # }
-        body = {"model": "gpt-4o",  # using the 4o-mini model
+        body = {"model": "gpt-4o",
                "messages": [
-                    {"role": "system", "content": '''You are a helpful HR assistant.
-                      Your job is to extract the technical skills and the years of experience in each skill from the CV provided by the user.
-                      Please format the output to a JSON list of skills.
-                      Please do not output markdown content.'''},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content":prompt}
                 ]}
         headers = {
            "Content-Type": "application/json",
-           "Authorization": "Bearer KEY" 
+           "Authorization": "Bearer " + self.openai_key
         }
        
         response = requests.post(f'{self.url}', json=body, headers=headers)

@@ -1,6 +1,25 @@
 #Sends requests to LLM
 import json
 import requests
+import diskcache as dc
+import hashlib
+
+def cache_request(funct):
+    def wrapper(*args, **kwargs):
+        cache = dc.Cache('cache')
+        # generate the key as a has of the prompt
+        print(f'Args: {args}')
+        key = hashlib.sha256(args[1].encode()).hexdigest()
+        print(f'Key: {key}')
+        if key in cache:
+            print('Cache hit')
+            return cache[key]
+        else:
+            print('Cache miss')
+            result = funct(*args, **kwargs)
+            cache[key] = result
+            return result
+    return wrapper
 
 class LLMClient:
     '''
@@ -42,8 +61,9 @@ class LLMClient:
             return result
 
         return wrapper
-    
+
     #@log_tokens
+    @cache_request
     def send_request(self, prompt, model="4o-mini", temperature=0.7, streaming=False,
                      system_prompt='You are a helpful HR assistant'):
         # body = {
